@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-var-requires */
 const path = require('path');
 
-const PROXY_TARGET = 'http://localhost:3000';
+const PROXY_TARGET = 'http://localhost:4040';
 const { merge } = require('webpack-merge');
 const common = require('./webpack.common.js');
 

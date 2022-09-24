@@ -1,0 +1,18 @@
+.list-wrapper {
+  position: absolute;
+  z-index: 1;
+  left: 47px;
+  top: 47px;
+  bottom: 40px;
+  background-color: #fff;
+  width: 317px;
+
+  .list-item {
+    cursor: pointer;
+    transition: .2s background-color;
+
+    &:hover, &.selected {
+      background-color: #e2e2e2;
+    }
+  }
+}
