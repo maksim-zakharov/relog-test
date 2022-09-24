@@ -1,6 +1,6 @@
 import * as React from 'react';
-import { useYMaps } from '../../hooks/useYMaps';
 import { useEffect, useMemo } from 'react';
+import { useYMaps } from '../../hooks/useYMaps';
 import './App.styles.less';
 import * as YMaps from 'yandex-maps';
 import { useGetClientsQuery, useGetOrdersQuery } from './App.store';
@@ -65,7 +65,7 @@ const App = () => {
   const getPointOptions = (order: OrderViewItem) => {
     return {
       orderId: order.id,
-      preset: order.id === selectedId ? 'islands#redStretchyIcon' : 'islands#violetIcon',
+      preset: 'islands#violetIcon',
     };
   };
 
@@ -77,14 +77,16 @@ const App = () => {
     return ordersWithClients.map((order, i) => {
       const placeMark = new ymaps.Placemark([order.coords.lat, order.coords.long], getPointData(order), getPointOptions(order));
 
-      // placeMark.events.add('mouseenter', () => {
-      //   placeMark.balloon.open();
-      // })
+      // Если метка не попала в кластер и видна на карте, откроем ее балун.
+      // placeMark.balloon.events.add('close', function(e) {
+      //   searchParams.delete('orderId');
+      //   setSearchParams(searchParams);
+      // });
 
       return placeMark;
     });
 
-  }, [ymaps, ordersWithClients, selectedId]);
+  }, [ymaps, ordersWithClients]);
 
   const clusterer = useMemo(() => {
 
@@ -92,7 +94,7 @@ const App = () => {
       return undefined;
     }
 
-    const clusterer = new ymaps.Clusterer({
+    return new ymaps.Clusterer({
       /**
        * Через кластеризатор можно указать только стили кластеров,
        * стили для меток нужно назначать каждой метке отдельно.
@@ -113,14 +115,6 @@ const App = () => {
       geoObjectHideIconOnBalloonOpen: false,
       gridSize: 80,
     });
-
-    /**
-     * В кластеризатор можно добавить javascript-массив меток (не геоколлекцию) или одну метку.
-     * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Clusterer.xml#add
-     */
-    clusterer.add(placeMarks);
-
-    return clusterer;
   }, [ymaps, placeMarks]);
 
   const map = useMemo(() => ymaps && new ymaps.Map('map', {
@@ -133,37 +127,38 @@ const App = () => {
   }), [ymaps]);
 
   useEffect(() => {
-    if (!map || !clusterer || !ordersWithClients.length) {
-      return;
-    }
+    /**
+     * В кластеризатор можно добавить javascript-массив меток (не геоколлекцию) или одну метку.
+     * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Clusterer.xml#add
+     */
 
-    map.geoObjects.removeAll();
-    // @ts-ignore
-    map.geoObjects.add(clusterer);
+    // map.geoObjects.removeAll();
+    if (map && !map.geoObjects.get(0)) {
+      // @ts-ignore
+      map.geoObjects.add(clusterer);
+      clusterer?.add(placeMarks);
 
-    if (!selectedId && map.getZoom() === defaultZoom) {
-      map.setBounds(clusterer.getBounds(), {
-        checkZoomRange: true,
-      });
+      console.log('Render ChangePlaceMarks');
     }
-  }, [map, clusterer, selectedId]);
+  }, [map, clusterer, placeMarks]);
 
   useEffect(() => {
-    const selectedOrder = orders.find(order => order.id === selectedId);
-    if (selectedOrder && ymaps && map) {
-      map.setCenter([selectedOrder.coords.lat, selectedOrder.coords.long], selectedZoom);
+    if (map && clusterer.getGeoObjects().length) {
       // @ts-ignore
       const selectedPlacemark: Placemark = clusterer.getGeoObjects().find((o: any) => o.properties._data.id === selectedId);
       if (selectedPlacemark) {
-        // Если метка не попала в кластер и видна на карте, откроем ее балун.
-        selectedPlacemark.balloon.open();
-        selectedPlacemark.balloon.events.add('close', function (e) {
-          searchParams.delete('orderId');
-          setSearchParams(searchParams);
+        console.log('Render BalloonOpen');
+        map.setCenter(selectedPlacemark.geometry._coordinates, selectedZoom).then(() => selectedPlacemark.balloon.open());
+        selectedPlacemark.options.set({
+          preset: 'islands#redStretchyIcon',
+        });
+      } else {
+        map.setBounds(clusterer.getBounds(), {
+          checkZoomRange: true,
         });
       }
     }
-  }, [ymaps, orders, map, selectedId]);
+  }, [clusterer, map, selectedId]);
 
   const handleSelectedOrder = (selectedId: number) => {
     searchParams.set('orderId', selectedId.toString());
@@ -173,7 +168,8 @@ const App = () => {
   return (
     <>
       <div id="map"></div>
-      <OrdersList currency={currency} locale={locale} selectedId={selectedId} orders={ordersWithClients} onSelect={handleSelectedOrder} />
+      <OrdersList currency={currency} locale={locale} selectedId={selectedId} orders={ordersWithClients}
+                  onSelect={handleSelectedOrder} />
     </>
   );
 };
