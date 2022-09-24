@@ -16,13 +16,13 @@ ENV NODE_ENV=${NODE_ENV}
 ARG PORT
 ENV PORT=${PORT}
 
-WORKDIR /usr/src/app
+#WORKDIR /usr/src/app
 
-COPY package*.json ./
+#COPY package*.json ./
 
-RUN npm install --only=production
+#RUN npm install --only=production
 
-COPY --from=build /dist/server /usr/src/app
+#COPY --from=build /dist/server /usr/src/app
 
 EXPOSE $PORT
 
