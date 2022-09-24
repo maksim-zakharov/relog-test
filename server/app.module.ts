@@ -6,7 +6,10 @@ import { join } from 'path';
 @Module({
   imports: [
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname, '..', 'client'),
+      rootPath: join(__dirname, 'client'),
+      // serveRoot: '/',
+      // renderPath: '/*',
+      exclude: ['/api*'],
       // serveRoot: '/admin',
       // renderPath: '/admin/*',
     })],

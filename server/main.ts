@@ -4,8 +4,6 @@ import * as jsonServer from 'json-server';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.setGlobalPrefix('/');
-
   const router = jsonServer.router('db.json');
   const middlewares = jsonServer.defaults();
 
