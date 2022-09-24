@@ -78,10 +78,19 @@ const App = () => {
       const placeMark = new ymaps.Placemark([order.coords.lat, order.coords.long], getPointData(order), getPointOptions(order));
 
       // Если метка не попала в кластер и видна на карте, откроем ее балун.
-      // placeMark.balloon.events.add('close', function(e) {
-      //   searchParams.delete('orderId');
-      //   setSearchParams(searchParams);
-      // });
+      placeMark.balloon.events.add('close', function(e) {
+        // searchParams.delete('orderId');
+        // setSearchParams(searchParams);
+
+        placeMark.options.set({
+          preset: 'islands#violetIcon',
+        });
+      });
+
+      placeMark.events.add('click', () => {
+          searchParams.set('orderId', order.id.toString());
+          setSearchParams(searchParams);
+      })
 
       return placeMark;
     });
@@ -127,6 +136,10 @@ const App = () => {
   }), [ymaps]);
 
   useEffect(() => {
+    clusterer?.add(placeMarks);
+  }, [clusterer, placeMarks]);
+
+  useEffect(() => {
     /**
      * В кластеризатор можно добавить javascript-массив меток (не геоколлекцию) или одну метку.
      * @see https://api.yandex.ru/maps/doc/jsapi/2.1/ref/reference/Clusterer.xml#add
@@ -136,7 +149,6 @@ const App = () => {
     if (map && !map.geoObjects.get(0)) {
       // @ts-ignore
       map.geoObjects.add(clusterer);
-      clusterer?.add(placeMarks);
 
       console.log('Render ChangePlaceMarks');
     }
@@ -148,7 +160,8 @@ const App = () => {
       const selectedPlacemark: Placemark = clusterer.getGeoObjects().find((o: any) => o.properties._data.id === selectedId);
       if (selectedPlacemark) {
         console.log('Render BalloonOpen');
-        map.setCenter(selectedPlacemark.geometry._coordinates, selectedZoom).then(() => selectedPlacemark.balloon.open());
+        map.setCenter(selectedPlacemark.geometry._coordinates, selectedZoom, {duration: 500})
+          .then(() => selectedPlacemark.balloon.open());
         selectedPlacemark.options.set({
           preset: 'islands#redStretchyIcon',
         });
