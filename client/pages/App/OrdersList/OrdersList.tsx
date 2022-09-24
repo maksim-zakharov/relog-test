@@ -4,26 +4,29 @@ import * as React from 'react';
 import { FC, useEffect, useLayoutEffect, useState } from 'react';
 import { Order, OrderType, OrderTypeNames, OrderViewItem } from '../models';
 import './OrdersList.styles.less';
-import {UploadOutlined, DownloadOutlined} from '@ant-design/icons';
+import { UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 
 interface Props {
   selectedId?: number;
   orders: OrderViewItem[];
+  currency: string;
+  locale: string;
   onSelect?: (id: number) => void;
 }
 
-const OrdersList: FC<Props> = ({selectedId, orders = [], onSelect}) => {
+const OrdersList: FC<Props> = ({ selectedId, currency, locale, orders = [], onSelect }) => {
   const [innerSelectedId, setSelectedId] = useState<number | undefined>(selectedId);
 
   useEffect(() => {
-    setSelectedId(selectedId)
-  }, [selectedId])
+    setSelectedId(selectedId);
+  }, [selectedId]);
 
   const [size, setSize] = useState([0, 0]);
   useLayoutEffect(() => {
     function updateSize() {
       setSize([window.innerWidth, window.innerHeight]);
     }
+
     window.addEventListener('resize', updateSize);
     updateSize();
     return () => window.removeEventListener('resize', updateSize);
@@ -32,7 +35,7 @@ const OrdersList: FC<Props> = ({selectedId, orders = [], onSelect}) => {
   const onSelected = (order: Order) => {
     setSelectedId(order.id);
     onSelect?.(order.id);
-  }
+  };
 
   return (<List
     className="list-wrapper"
@@ -44,17 +47,20 @@ const OrdersList: FC<Props> = ({selectedId, orders = [], onSelect}) => {
       itemKey="id"
     >
       {(item: OrderViewItem) => (
-        <List.Item key={item.id} className={innerSelectedId === item.id ? 'list-item selected' : 'list-item'} onClick={() => onSelected(item)}>
+        <List.Item key={item.id} className={innerSelectedId === item.id ? 'list-item selected' : 'list-item'}
+                   onClick={() => onSelected(item)}>
           <List.Item.Meta
             title={item.client?.name}
-            avatar={<Tooltip title={OrderTypeNames[item.type]}>{item.type === OrderType.Pickup ? <UploadOutlined style={{fontSize: 24, color: 'red'}}/> : <DownloadOutlined style={{fontSize: 24, color: 'green'}}/>}</Tooltip>}
+            avatar={<Tooltip title={OrderTypeNames[item.type]}>{item.type === OrderType.Pickup ?
+              <UploadOutlined style={{ fontSize: 24, color: 'red' }} /> :
+              <DownloadOutlined style={{ fontSize: 24, color: 'green' }} />}</Tooltip>}
             description={<strong>{OrderTypeNames[item.type]}</strong>}
           />
-          <div>{new Intl.NumberFormat('ru-RU', {style: 'currency', currency: 'RUB'}).format(item.price)}</div>
+          <div>{new Intl.NumberFormat(locale, { style: 'currency', currency }).format(item.price)}</div>
         </List.Item>
       )}
     </VirtualList>
-  </List>)
-}
+  </List>);
+};
 
 export default OrdersList;

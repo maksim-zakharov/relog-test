@@ -4,13 +4,13 @@ import { useEffect, useMemo } from 'react';
 import './App.styles.less';
 import * as YMaps from 'yandex-maps';
 import { useGetClientsQuery, useGetOrdersQuery } from './App.store';
-import { Order, OrderTypeNames, OrderViewItem } from './models';
-import { Card } from 'antd';
+import { OrderViewItem } from './models';
 import OrdersList from './OrdersList/OrdersList';
 import { useSearchParams } from 'react-router-dom';
-import { Clusterer } from 'yandex-maps';
 
 const App = () => {
+  const locale = 'kz-KZ'; // 'ru-RU';
+  const currency = 'KZT'; // 'RUB';
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -51,9 +51,9 @@ const App = () => {
     return {
       id: order.id,
       balloonContentHeader: 'ID Заказа: <strong>' + order.id + '</strong>',
-      balloonContentBody: `<div>` + order.client?.name + ' ' + new Intl.NumberFormat('ru-RU', {
+      balloonContentBody: `<div>` + order.client?.name + ' ' + new Intl.NumberFormat(locale, {
         style: 'currency',
-        currency: 'RUB',
+        currency,
       }).format(order.price) + `</div>`,
     };
   };
@@ -133,7 +133,7 @@ const App = () => {
   }), [ymaps]);
 
   useEffect(() => {
-    if (!map || !clusterer) {
+    if (!map || !clusterer || !ordersWithClients.length) {
       return;
     }
 
@@ -173,7 +173,7 @@ const App = () => {
   return (
     <>
       <div id="map"></div>
-      <OrdersList selectedId={selectedId} orders={ordersWithClients} onSelect={handleSelectedOrder} />
+      <OrdersList currency={currency} locale={locale} selectedId={selectedId} orders={ordersWithClients} onSelect={handleSelectedOrder} />
     </>
   );
 };
