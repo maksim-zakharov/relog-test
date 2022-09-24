@@ -88,9 +88,9 @@ const App = () => {
       });
 
       placeMark.events.add('click', () => {
-          searchParams.set('orderId', order.id.toString());
-          setSearchParams(searchParams);
-      })
+        searchParams.set('orderId', order.id.toString());
+        setSearchParams(searchParams);
+      });
 
       return placeMark;
     });
@@ -136,7 +136,10 @@ const App = () => {
   }), [ymaps]);
 
   useEffect(() => {
+    clusterer?.remove(placeMarks);
     clusterer?.add(placeMarks);
+
+    console.log('Render ChangePlaceMarks');
   }, [clusterer, placeMarks]);
 
   useEffect(() => {
@@ -149,10 +152,8 @@ const App = () => {
     if (map && !map.geoObjects.get(0)) {
       // @ts-ignore
       map.geoObjects.add(clusterer);
-
-      console.log('Render ChangePlaceMarks');
     }
-  }, [map, clusterer, placeMarks]);
+  }, [map, clusterer]);
 
   useEffect(() => {
     if (map && clusterer.getGeoObjects().length) {
@@ -160,7 +161,9 @@ const App = () => {
       const selectedPlacemark: Placemark = clusterer.getGeoObjects().find((o: any) => o.properties._data.id === selectedId);
       if (selectedPlacemark) {
         console.log('Render BalloonOpen');
-        map.setCenter(selectedPlacemark.geometry._coordinates, selectedZoom, {duration: 500})
+        // map.panTo(selectedPlacemark.geometry._coordinates)
+        //   .then(() => selectedPlacemark.balloon.open());
+        map.setCenter(selectedPlacemark.geometry._coordinates, selectedZoom)
           .then(() => selectedPlacemark.balloon.open());
         selectedPlacemark.options.set({
           preset: 'islands#redStretchyIcon',
