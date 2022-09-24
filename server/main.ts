@@ -13,7 +13,7 @@ async function bootstrap() {
   app.use(compression());
   app.setGlobalPrefix('api');
   app.use(json({ limit: '50mb' }));
-  app.use(urlencoded({ extended: true, limit: '50mb' }));=
+  app.use(urlencoded({ extended: true, limit: '50mb' }));
   await app.listen(port, () => {
     new Logger('NestApplication').log(`Listening at http://localhost:${port}`);
   });
